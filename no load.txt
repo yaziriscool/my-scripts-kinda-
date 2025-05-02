@@ -1,0 +1,2 @@
+game:GetService("ReplicatedFirst"):WaitForChild("CustomLoading"):Destroy()
+game.Players.LocalPlayer.PlayerGui:WaitForChild("LoadingScreen"):Destroy()

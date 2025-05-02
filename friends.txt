@@ -1,0 +1,11 @@
+spawn(function()
+	while wait(1) do
+			pcall(function()
+				local args = {
+    [1] = 100,
+    [2] = "Regular"
+}
+game:GetService("ReplicatedStorage").GasStation.Refuel:FireServer(unpack(args))
+			end)
+		end
+end)

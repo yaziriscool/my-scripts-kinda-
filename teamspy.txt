@@ -1,0 +1,133 @@
+-- Wait for the game to finish loading
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+
+local RunService       = game:GetService("RunService")
+local ChatService      = game:GetService("Chat")
+local TextChatService  = game:GetService("TextChatService")
+local Players          = game:GetService("Players")
+
+local LocalPlayer      = Players.LocalPlayer
+local Clr              = Color3.fromRGB(0, 255, 0)
+
+-- [ player.UserId ] = { [message] = true }
+local PublicChats  = {}
+-- [ player.UserId ] = { timestamps = { … }, recentMessages = { … } }
+local SpamTracker  = {}
+
+-- has this exact msg already been seen as public?
+local function IsPublic(player, msg)
+    local log = PublicChats[player.UserId]
+    return log and log[msg]
+end
+
+-- mark this msg so future checks skip it
+local function MarkPublic(player, msg)
+    PublicChats[player.UserId] = PublicChats[player.UserId] or {}
+    PublicChats[player.UserId][msg] = true
+end
+
+-- very simple anti‑spam
+local function IsSpam(player, msg)
+    local now = tick()
+    local uid = player.UserId
+    SpamTracker[uid] = SpamTracker[uid] or { timestamps = {}, recentMessages = {} }
+    local t = SpamTracker[uid]
+
+    -- remove old timestamps
+    table.insert(t.timestamps, now)
+    while t.timestamps[1] and now - t.timestamps[1] > 5 do
+        table.remove(t.timestamps, 1)
+    end
+    if #t.timestamps >= 5 then
+        return true
+    end
+
+    -- repeated exact messages
+    table.insert(t.recentMessages, msg)
+    if #t.recentMessages > 10 then
+        table.remove(t.recentMessages, 1)
+    end
+    local count = 0
+    for _, past in ipairs(t.recentMessages) do
+        if past:lower() == msg:lower() then
+            count = count + 1
+        end
+    end
+    if count >= 3 then
+        return true
+    end
+
+    -- super‑long or super‑random
+    if #msg >= 150 then return true end
+    if #msg > 30 then
+        local unique = {}
+        for c in msg:gmatch(".") do unique[c] = true end
+        if (#unique / #msg) > 0.7 then
+            return true
+        end
+    end
+
+    return false
+end
+
+-- actually send to RBXSystem (and also chat bubble if you like)
+local function Log(name, msg)
+    local systemCh = TextChatService.TextChannels:FindFirstChild("RBXSystem")
+    if not systemCh then return end
+
+    -- bubble above the player's head
+    local plr = Players:FindFirstChild(name)
+    if plr and plr.Character and plr.Character:FindFirstChild("Head") then
+        ChatService:Chat(plr.Character.Head, msg, Enum.ChatColor.White)
+    end
+
+    -- system console-style
+    local formatted = string.format(
+        '<font color="rgb(%d,%d,%d)">[%s]: %s</font>',
+        Clr.R * 255, Clr.G * 255, Clr.B * 255,
+        name, msg
+    )
+    systemCh:DisplaySystemMessage(formatted)
+end
+
+-- watch RBXGeneral & RBXTeamFossil to mark what’s public
+for _, channelName in ipairs({ "RBXGeneral", "RBXTeamFossil" }) do
+    local ch = TextChatService.TextChannels:WaitForChild(channelName)
+    ch.MessageReceived:Connect(function(message)
+        local src = message.TextSource
+        if src then
+            local pl = Players:GetPlayerByUserId(src.UserId)
+            if pl then
+                MarkPublic(pl, message.Text)
+            end
+        end
+    end)
+end
+
+-- hook up Player.Chatted
+local function onPlayerAdded(player)
+    PublicChats[player.UserId] = PublicChats[player.UserId] or {}
+    player.Chatted:Connect(function(msg)
+        -- give MessageReceived up to 1s to mark any public chat
+        local start = tick()
+        repeat
+            if IsPublic(player, msg) then
+                return
+            end
+            task.wait(0.05)
+        until tick() - start >= 1
+
+        if player ~= LocalPlayer and not IsPublic(player, msg) and not IsSpam(player, msg) then
+            Log(player.Name, msg)
+            MarkPublic(player, msg)
+        end
+    end)
+end
+
+-- initialize existing players
+for _, pl in ipairs(Players:GetPlayers()) do
+    onPlayerAdded(pl)
+end
+Players.PlayerAdded:Connect(onPlayerAdded)

@@ -1,0 +1,116 @@
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+
+local http_request = http_request or request or (syn and syn.request) or (http and http.request)
+local HttpService = game:GetService("HttpService")
+if not http_request or not getgc then
+    game.Players.LocalPlayer:Kick("Your exploit does not support this script!\nPlease try the auto grammar script instead.\nhttps://discord.gg/nSEbfnvtfF")
+    setclipboard("https://discord.gg/nSEbfnvtfF")
+end
+
+-- Replace with your own OpenAI API key
+local OPENAI_API_KEY = "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"
+
+local function ImproveWithOpenAI(Input)
+    local messages = {
+        {
+            role = "system",
+            content = "You are a helpful assistant. Correct the user's message for grammar, spelling, capitalization, commas, Abbreviations (from tbh to to be honest) and ALWAYS use punctuation unless using a question mark or exclamation mark. Return only the corrected version. (Even if they send one Letter or punctuations) Do not say anything else besides their corrected words (dont change it if the user goes '...' even at the end of their sentences) ALWAYS use punctuation '.' no matter what."
+        },
+        {
+            role = "user",
+            content = "Input: " .. Input .. "\nOutput:"
+        }
+    }
+    local data = {
+        model = "gpt-4.1-nano-2025-04-14",
+        messages = messages,
+        max_tokens = 150,
+        temperature = 1
+    }
+    local json_data = HttpService:JSONEncode(data)
+    local Response = http_request({
+        Url = "https://api.openai.com/v1/chat/completions",
+        Method = "POST",
+        Headers = {
+            ["Content-Type"] = "application/json",
+            ["Authorization"] = "Bearer " .. OPENAI_API_KEY
+        },
+        Body = json_data
+    })
+    if not Response.Success then
+        return Input
+    end
+    local Body = HttpService:JSONDecode(Response.Body)
+    local ImprovedInput = Body.choices and Body.choices[1] and Body.choices[1].message and Body.choices[1].message.content or Input
+    return ImprovedInput
+end
+
+-- Create the GUI
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "QuillBotGui"
+screenGui.Parent = PlayerGui
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 300, 0, 50)
+frame.Position = UDim2.new(0.5, -150, 0.8, 0)
+frame.BackgroundTransparency = 0.5
+frame.BackgroundColor3 = Color3.new(0, 0, 0)
+frame.Visible = false
+frame.Parent = screenGui
+
+local textBox = Instance.new("TextBox")
+textBox.Size = UDim2.new(1, -10, 1, -10)
+textBox.Position = UDim2.new(0, 5, 0, 5)
+textBox.ClearTextOnFocus = false
+textBox.PlaceholderText = "Type message here..."
+textBox.TextColor3 = Color3.new(1, 1, 1)
+textBox.BackgroundTransparency = 1
+textBox.Parent = frame
+
+local UserInputService = game:GetService("UserInputService")
+local TextChatService = game:GetService("TextChatService")
+
+-- Toggle the GUI on comma (',') key
+UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+    if gameProcessedEvent then return end
+    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.Comma then
+        frame.Visible = not frame.Visible
+        
+        if frame.Visible then
+            -- Wait briefly so the comma press won't be typed into textBox
+            task.wait(0.05)  -- Adjust wait time if needed
+            textBox.Text = ""
+            textBox:CaptureFocus()
+        else
+            textBox:ReleaseFocus()
+        end
+    end
+end)
+
+-- When the user presses Enter, process and send the message
+textBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        local msg = textBox.Text
+        textBox.Text = ""
+        if msg and msg ~= "" then
+            local improvedMsg = ImproveWithOpenAI(msg)
+            if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+                pcall(function()
+                    TextChatService.TextChannels.RBXGeneral:SendAsync(improvedMsg)
+                end)
+            else
+                game.ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(improvedMsg, "All")
+            end
+        end
+        frame.Visible = false
+    end
+end)
+
+-- Lil join prompt thing (kept from original script)
+loadstring(game:HttpGet("https://raw.githubusercontent.com/eosuwu/boblox/main/invite.lua"))()

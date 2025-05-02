@@ -1,0 +1,79 @@
+-- Place this in a LocalScript (for example, StarterPlayerScripts)
+
+repeat wait() until game:IsLoaded()
+
+local Players = game:GetService("Players")
+
+-- Define role-color mappings
+local directorRoles = {
+    ["Junior Director"] = true,
+    ["Senior Director"] = true,
+    ["Head Director"] = true,
+}
+local corporateRoles = {
+    ["Corporate Intern"] = true,
+    ["Junior Corporate"] = true,
+    ["Senior Corporate"] = true,
+    ["Head Corporate"] = true,
+}
+
+-- Decide which color to use based on their role
+local function getHighlightColorFromRole(roleName)
+    if directorRoles[roleName] then
+        -- Pinkish red
+        return Color3.fromRGB(255, 90, 120)
+    elseif corporateRoles[roleName] then
+        -- Teal
+        return Color3.fromRGB(0, 200, 200)
+    end
+    -- Return nil if neither Director nor Corporate
+    return nil
+end
+
+-- Applies a highlight to the character with the specified color
+local function applyHighlight(character, color)
+    -- Make sure we don't stack multiple highlights if the script re-runs
+    local existingHighlight = character:FindFirstChildWhichIsA("Highlight")
+    if existingHighlight then
+        existingHighlight:Destroy()
+    end
+
+    local highlight = Instance.new("Highlight")
+    highlight.FillTransparency = 0.3
+    highlight.FillColor = color
+    highlight.OutlineColor = color
+    highlight.OutlineTransparency = 0
+    highlight.Parent = character
+end
+
+-- Checks the player’s role info and applies highlight if they are a Director or Corporate
+local function highlightIfAdmin(player)
+    local groupInfo = player:FindFirstChild("GroupInfo")
+    if not groupInfo then return end
+    
+    local roleObject = groupInfo:FindFirstChild("Role")
+    if not roleObject then return end
+    
+    local color = getHighlightColorFromRole(roleObject.Value)
+    if not color then return end
+    
+    -- Apply highlight now if the character is already loaded
+    if player.Character then
+        applyHighlight(player.Character, color)
+    end
+    
+    -- Also apply highlight whenever their character spawns again
+    player.CharacterAdded:Connect(function(character)
+        applyHighlight(character, color)
+    end)
+end
+
+-- Highlight existing players that match the criteria
+for _, player in ipairs(Players:GetPlayers()) do
+    highlightIfAdmin(player)
+end
+
+-- Highlight future players that join
+Players.PlayerAdded:Connect(function(player)
+    highlightIfAdmin(player)
+end)

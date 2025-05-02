@@ -1,0 +1,33 @@
+-- Wait for game to fully load
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+
+local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local SoundService = game:GetService("SoundService")
+
+-- Wait for LocalPlayer and relevant services
+local player = Players.LocalPlayer
+local playerScripts = player:WaitForChild("PlayerScripts")
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Set volume settings
+SoundService:WaitForChild("Music").Volume = 0
+SoundService:WaitForChild("Sound Effects").Volume = 0
+
+-- Safely destroy UI and scripts if they exist
+local success, err = pcall(function()
+    StarterGui:WaitForChild("UIs"):WaitForChild("ChatFrame"):Destroy()
+    playerScripts:WaitForChild("welcome"):Destroy()
+    playerGui:WaitForChild("sounds"):WaitForChild("Radio"):Destroy()
+    --playerGui:WaitForChild("AFKIndicator"):Destroy() -- Uncomment if AFKIndicator is guaranteed to exist
+    playerGui:WaitForChild("UIs"):WaitForChild("ChatFrame"):Destroy()
+end)
+if not success then
+    warn("Failed to destroy some UI elements:", err)
+end
+
+-- Fire tutorial completion event
+ReplicatedStorage:WaitForChild("DataEvents"):WaitForChild("FinishTutorial"):FireServer()

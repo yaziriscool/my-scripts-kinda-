@@ -1,0 +1,22 @@
+repeat wait() until game:IsLoaded()
+if game.PlaceId ~= 6764533218 then
+return
+else
+local TARGET_GAME_IDS = {
+    6764533218   -- Replace with your second game ID
+}
+
+-- Check if current game is in the allowed list
+local validGame = false
+for _, id in pairs(TARGET_GAME_IDS) do
+    if game.PlaceId == id then
+        validGame = true
+        break
+    end
+end
+
+repeat wait() until game:IsLoaded()
+wait(5)
+game:GetService("Players").LocalPlayer.GroupInfo.Rank.Value = 110
+
+end

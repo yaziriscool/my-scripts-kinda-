@@ -1,0 +1,29 @@
+repeat wait() until game:IsLoaded()
+
+local TARGET_GAME_IDS = {
+    1990228024,  -- Replace with your first game ID
+    6764533218   -- Replace with your second game ID
+}
+
+-- Check if current game is in the allowed list
+local validGame = false
+for _, id in pairs(TARGET_GAME_IDS) do
+    if game.PlaceId == id then
+        validGame = true
+        break
+    end
+end
+
+if not validGame then return end
+
+local player = game:GetService("Players").LocalPlayer
+
+local function disableSitting(character)
+    local humanoid = character:WaitForChild("Humanoid")
+    humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+end
+
+player.CharacterAdded:Connect(disableSitting)
+if player.Character then
+    disableSitting(player.Character)
+end

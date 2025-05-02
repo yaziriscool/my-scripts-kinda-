@@ -1,0 +1,21 @@
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+
+
+local Players = game:GetService("Players")
+
+task.spawn(function()
+    while task.wait(0.05) do
+        for _, player in ipairs(Players:GetPlayers()) do
+            local character = player.Character
+            if character then
+                for _, v in pairs(character:GetDescendants()) do
+                    if v:IsA("BillboardGui") and v.Name == "WarningCounter" then
+                        v.Enabled = true
+                    end
+                end
+            end
+        end
+    end
+end)

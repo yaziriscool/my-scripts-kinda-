@@ -1,0 +1,52 @@
+if not game:IsLoaded() then
+       game.Loaded:Wait()
+end
+if game.PlaceId == 6764533218 then
+local Player = game:GetService("Players").LocalPlayer
+local function GetVehicle()
+    for _,Vehicle in game:GetService("Workspace").SpawnedCars:GetChildren() do 
+        if string.find(Vehicle.Name, game.Players.LocalPlayer.Name) and Vehicle:WaitForChild("Chassis"):WaitForChild("VehicleSeat"):FindFirstChild("SeatWeld") then 
+            return Vehicle
+        end
+    end
+    
+    return nil
+end
+local carSpawn = game:GetService("Players").LocalPlayer.PlayerGui:WaitForChild("MainUI"):WaitForChild("SideMenu"):WaitForChild("List"):WaitForChild("Settings"):Clone()
+carSpawn.Parent = game:GetService("Players").LocalPlayer.PlayerGui.MainUI.SideMenu.List
+carSpawn.Name = "CarSpawn"
+carSpawn.ImageButton.Image = "rbxassetid://3926305904"
+carSpawn.ImageButton.ImageRectOffset = Vector2.new(204,404)
+carSpawn.ImageButton.ImageRectSize = Vector2.new(36,36)
+carSpawn.ImageButton.Activated:Connect(function()
+    if Player.PlayerGui.CarSelection.MainFrame.Position == UDim2.new(1.20000005, 30, 0.5, 0) then
+    local Character = Player.Character or Player.CharacterAdded:Wait()
+    local originalCFrame = Character.PrimaryPart.CFrame
+    for _,child in game:GetService("Workspace"):GetChildren() do 
+        if child.Name == "CarSpawner" then 
+            if child.CarSpawner.Screen.CarSystem.ObjectText == "Main Lot" then 
+                repeat task.wait()
+                Character:PivotTo(CFrame.new(-105, 3, 121))
+                fireproximityprompt(child.CarSpawner.Screen.CarSystem)
+                until Player.PlayerGui.CarSelection.MainFrame.Position ~= UDim2.new(1.20000005, 30, 0.5, 0)
+                end
+                end
+                end
+                Character = Player.Character or Player.CharacterAdded:Wait()
+                Character:PivotTo(originalCFrame)
+            local lastCFrame
+            local Vehicle
+            repeat task.wait() until Player.PlayerGui.CarSelection.MainFrame.Position == UDim2.new(1, -5, 0.5, 0)
+            repeat task.wait()
+                Vehicle = GetVehicle()
+                if Vehicle == nil then
+                    Character = Player.Character or Player.CharacterAdded:Wait()
+                    lastCFrame = Character.PrimaryPart.CFrame
+                end
+            until Vehicle ~= nil or Player.PlayerGui.CarSelection.MainFrame.Position ~= UDim2.new(1, -5, 0.5, 0)
+            if Vehicle ~= nil then
+                Vehicle:PivotTo(lastCFrame)
+            end
+end
+end)
+end

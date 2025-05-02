@@ -1,0 +1,177 @@
+-- Place this in a LocalScript, e.g. in StarterPlayerScripts
+
+repeat wait() until game:IsLoaded()
+
+local Players = game:GetService("Players")
+
+-- Directors (MR) roles
+local mrRoles = {
+	["Junior Director"] = true,
+	["Senior Director"] = true,
+	["Head Director"]   = true
+}
+
+-- Corporates (HR) roles
+local hrRoles = {
+	["Corporate Intern"]  = true,
+	["Junior Corporate"]  = true,
+	["Senior Corporate"]  = true,
+	["Head Corporate"]    = true
+}
+
+-- Is this player a Director (MR)?
+local function isMR(player)
+	local success, groupInfo = pcall(function()
+		return player:FindFirstChild("GroupInfo")
+	end)
+	return success 
+		and groupInfo 
+		and groupInfo:FindFirstChild("Role") 
+		and mrRoles[groupInfo.Role.Value] == true
+end
+
+-- Is this player a Corporate (HR)?
+local function isHR(player)
+	local success, groupInfo = pcall(function()
+		return player:FindFirstChild("GroupInfo")
+	end)
+	return success 
+		and groupInfo 
+		and groupInfo:FindFirstChild("Role") 
+		and hrRoles[groupInfo.Role.Value] == true
+end
+
+-- Play a quick notification sound
+local function playNotifSound()
+	local notifSound = Instance.new("Sound", workspace)
+	notifSound.PlaybackSpeed = 1.5
+	notifSound.Volume = 0.15
+	notifSound.SoundId = "rbxassetid://170765130"
+	notifSound.PlayOnRemove = true
+	notifSound:Destroy()
+end
+
+-- Send a simple notification
+local function sendNotification(title, text)
+	game.StarterGui:SetCore("SendNotification", {
+		Title    = title,
+		Text     = text,
+		Icon     = "rbxassetid://505845268", -- Change if desired
+		Duration = 600,                      -- How long before auto-dismiss
+		Button1  = "Okay"                    -- Clickable button to dismiss
+	})
+end
+
+-- Count MRs, HRs, and check if there's a "Corporate"
+local function getMRHRCounts()
+	local mrCount = 0
+	local hrCount = 0
+	local corporateFound = false
+	
+	for _, plr in ipairs(Players:GetPlayers()) do
+		if isMR(plr) then
+			mrCount += 1
+		elseif isHR(plr) then
+			hrCount += 1
+			-- We'll check the name for 'Corporate' or rely on roles, but here's name-check:
+			if string.find(plr.Name, "Corporate") then
+				corporateFound = true
+			end
+		end
+	end
+	
+	return mrCount, hrCount, corporateFound
+end
+
+-- When a new player joins, see if they're MR or HR
+Players.PlayerAdded:Connect(function(player)
+	if isMR(player) then
+		local mrCount, hrCount, corporateFound = getMRHRCounts()
+		playNotifSound()
+		
+		local message = "An MR (Director) has joined the server."
+		message = message .. "\nThere are now " .. mrCount .. " MRs in the server."
+		
+		sendNotification("MR Joined", message)
+		
+	elseif isHR(player) then
+		local mrCount, hrCount, corporateFound = getMRHRCounts()
+		playNotifSound()
+		
+		local message = "An HR (Corporate) has joined the server."
+		if corporateFound then
+			message = message .. " & at least one Corporate is here."
+		end
+		message = message .. "\nThere are now " .. hrCount .. " HR(s) in the server."
+		
+		sendNotification("HR Joined", message)
+	end
+end)
+
+-- When a player leaves, see if they were MR or HR
+Players.PlayerRemoving:Connect(function(player)
+	if isMR(player) then
+		task.wait()  -- Wait briefly so they've fully left
+		local mrCount, hrCount, corporateFound = getMRHRCounts()
+		playNotifSound()
+		
+		local message = "An MR (Director) has left the server."
+		if mrCount > 0 then
+			message = message .. "\nThere are now " .. mrCount .. " MRs left."
+		else
+			message = message .. "\nNo more MRs remain in the server."
+		end
+		
+		sendNotification("MR Left", message)
+		
+	elseif isHR(player) then
+		task.wait()  -- Wait briefly so they've fully left
+		local mrCount, hrCount, corporateFound = getMRHRCounts()
+		playNotifSound()
+		
+		local message = "An HR (Corporate) has left the server."
+		if corporateFound then
+			message = message .. " Another Corporate is still here."
+		end
+		
+		if hrCount > 0 then
+			message = message .. "\nThere are now " .. hrCount .. " HR(s) left."
+		else
+			message = message .. "\nNo more HRs remain in the server."
+		end
+		
+		sendNotification("HR Left", message)
+	end
+end)
+
+-- Do an initial check in case there are already MRs or HRs when you join
+local mrCount, hrCount, corporateFound = getMRHRCounts()
+if mrCount > 0 or hrCount > 0 then
+	playNotifSound()
+	
+	local message = ""
+	
+	if mrCount > 0 then
+		message = message .. "There " 
+		         .. (mrCount == 1 and "is " or "are ")
+		         .. mrCount 
+		         .. (mrCount == 1 and " MR" or " MRs") 
+		         .. " in the server."
+	end
+	
+	if hrCount > 0 then
+		if message ~= "" then
+			message = message .. "\n"
+		end
+		message = message .. "There "
+		         .. (hrCount == 1 and "is " or "are ")
+		         .. hrCount
+		         .. (hrCount == 1 and " HR" or " HRs")
+		         .. " in the server."
+		if corporateFound then
+			message = message .. " (Corporate present)"
+		end
+	end
+	
+	sendNotification("Current MRs/HRs", message)
+end
